@@ -1,0 +1,26 @@
+body {
+  font-family: system-ui, sans-serif;
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 16px;
+  color: #222;
+  line-height: 1.55;
+  background: #fff;
+}
+header { border-bottom: 1px solid #ddd; padding-bottom: 16px; margin-bottom: 8px; }
+.kicker { color: #a50026; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; margin: 0; }
+h1 { font-size: 40px; margin: 4px 0 8px; }
+.question { font-size: 19px; color: #444; margin: 0 0 8px; }
+.team { color: #666; font-size: 14px; margin: 0; }
+h2 { font-size: 24px; margin-top: 40px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+h3 { font-size: 18px; margin: 0 0 4px; }
+p, li { font-size: 15px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 12px 0; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e5e5e5; vertical-align: top; }
+th { background: #f6f6f6; }
+code { background: #f3f3f3; padding: 1px 4px; border-radius: 3px; font-size: 13px; }
+figure { margin: 36px 0; }
+figure p { color: #555; margin: 0 0 10px; }
+figure img { width: 100%; height: auto; border: 1px solid #eee; border-radius: 6px; }
+figure img.tall { max-width: 620px; display: block; }
+a { color: #2b6cb0; }

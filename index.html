@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forks in the Forecast</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <p class="kicker">DSC 106 Final Project Proposal</p>
+    <h1>Forks in the Forecast</h1>
+    <p class="question">How much hotter will your part of the world get, and how much of that is still up to us?</p>
+    <p class="team">Chaylen Nguyen-Tran, Jeffrey Kang, Peter Little, Jayleen Shang</p>
+  </header>
+
+  <section>
+    <h2>Dataset</h2>
+    <p>
+      We will use <strong>CMIP6</strong> (Coupled Model Intercomparison Project, Phase 6) from the NOAA public
+      dataset on Google Cloud, one of the Project 3 datasets. CMIP6 holds simulations from climate models run by
+      research centers worldwide under a shared set of experiments.
+    </p>
+    <table>
+      <thead><tr><th>Aspect</th><th>What we use</th></tr></thead>
+      <tbody>
+        <tr><td>Variable</td><td><code>tas</code>, near-surface air temperature, monthly (<code>Amon</code>); precipitation (<code>pr</code>) as a possible second measure</td></tr>
+        <tr><td>Experiments</td><td><code>historical</code> (1850 to 2014) + four future scenarios (2015 to 2100): SSP1-2.6, SSP2-4.5, SSP3-7.0, SSP5-8.5</td></tr>
+        <tr><td>Models</td><td>7 models with all five experiments: ACCESS-CM2, CanESM5, GFDL-ESM4, IPSL-CM6A-LR, MIROC6, MPI-ESM1-2-LR, MRI-ESM2-0 (member r1i1p1f1)</td></tr>
+        <tr><td>Space</td><td>46 IPCC AR6 land regions, plus a few cities snapped to the nearest grid cell</td></tr>
+      </tbody>
+    </table>
+    <p>
+      <strong>Processing:</strong> Kelvin to °C, monthly to annual means, cos(latitude)-weighted region averages,
+      years capped at 2100, warming relative to each model's 1850-1900 mean, median plus min/max across models,
+      and a 10-year rolling mean. The result is a small CSV (region, scenario, year, median, low, high) that D3
+      loads directly. Code: <a href="analysis/preprocessing.ipynb">preprocessing.ipynb</a>.
+    </p>
+  </section>
+
+  <section>
+    <h2>What we intend to do</h2>
+    <p>
+      We will build an explorable explanation: a scrolling article that walks readers through future warming,
+      with interactive D3 graphics woven into the text.
+    </p>
+    <ul>
+      <li><strong>And:</strong> the planet has already warmed, and every region shares that same past. The article opens with a warming-stripes view of the reader's chosen region.</li>
+      <li><strong>But:</strong> after 2015 the future forks into four emissions paths, and the gap between them is huge. Some regions face nearly 6°C more warming under very high emissions than under low emissions.</li>
+      <li><strong>Therefore:</strong> the path we choose decides when, and whether, each region crosses key thresholds like +2°C.</li>
+    </ul>
+    <p>
+      Readers pick their region (from a map or a list) at the start, and every later graphic updates to that
+      region, so the story is about where they live. Planned interactions: a map that recolors as the reader drags
+      a year slider, scenario toggles, a +2°C threshold slider that shows when each region crosses it, and hover
+      details with the model range.
+    </p>
+    <p>
+      This builds on our Project 3 chart (one region, four paths) but reframes it as a guided story with a map,
+      personalization, and annotated takeaways instead of a single chart.
+    </p>
+  </section>
+
+  <section>
+    <h2>Static visualizations</h2>
+    <p>
+      All six use our processed CMIP6 data (7-model median, warming vs 1850-1900). Each maps to a step in the story.
+      Code: <a href="analysis/static_figures.py">static_figures.py</a>.
+    </p>
+
+    <figure>
+      <h3>1. Warming stripes: one past, four futures</h3>
+      <p>Opening hook. Each stripe is one year in Western North America, colored by warming. The rows match until 2015, then split by scenario.</p>
+      <img src="images/fig1_stripes.png" alt="Warming stripes for Western North America under four scenarios">
+    </figure>
+
+    <figure>
+      <h3>2. The fork after 2015</h3>
+      <p>The average of 46 land regions has already warmed about 1.2°C. By 2100 the paths range from about 2°C (SSP1-2.6) to about 6°C (SSP5-8.5). The shaded bands show the model range.</p>
+      <img src="images/fig2_land_paths.png" alt="Average land warming paths with model range">
+    </figure>
+
+    <figure>
+      <h3>3. Same scenarios, different regions</h3>
+      <p>Six contrasting regions under the same four scenarios. Arctic and northern regions warm far more than the tropics, which is why the article personalizes by region.</p>
+      <img src="images/fig3_regions.png" alt="Warming paths for six contrasting regions">
+    </figure>
+
+    <figure>
+      <h3>4. When do thresholds arrive?</h3>
+      <p>For Western North America, the year the median first reaches +1.5, +2, +3 and +4°C. Under SSP1-2.6 the region never reaches +3°C by 2100; under SSP5-8.5 it passes +4°C in the 2060s. This becomes the threshold slider.</p>
+      <img src="images/fig4_thresholds.png" alt="Year each warming threshold is reached in Western North America">
+    </figure>
+
+    <figure>
+      <h3>5. The cost of the path</h3>
+      <p>Extra late-century warming under SSP5-8.5 instead of SSP1-2.6, for all 46 regions. It ranges from about 1.8°C (southern South America) to about 6°C (Russian Arctic).</p>
+      <img src="images/fig5_cost.png" alt="Extra warming under SSP5-8.5 vs SSP1-2.6 by region" class="tall">
+    </figure>
+
+    <figure>
+      <h3>6. How fast it is warming</h3>
+      <p>Land-average warming rate. Historical runs show about 0.16°C per decade (1950-2014). From 2015 to 2060 the rate rises to 0.23°C (SSP1-2.6) and 0.49°C (SSP5-8.5) per decade.</p>
+      <img src="images/fig6_rate.png" alt="Warming rate per decade, past vs future scenarios">
+    </figure>
+  </section>
+</body>
+</html>
