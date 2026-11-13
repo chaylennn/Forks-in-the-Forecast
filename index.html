@@ -17,44 +17,46 @@
   <section>
     <h2>Dataset</h2>
     <p>
-      We're sticking with CMIP6, the climate model dataset we used for Project 3. It comes from NOAA's public bucket
-      on Google Cloud and has simulations from climate models built by research groups all over the world, all run
-      under the same set of scenarios.
+      We are using <strong>CMIP6</strong> (Coupled Model Intercomparison Project, Phase 6) from NOAA's public dataset
+      on Google Cloud, one of the Project 3 datasets. It contains climate model simulations from research centers
+      around the world, all run under the same scenarios.
     </p>
-    <p>Here's the part of it we're using:</p>
-    <ul>
-      <li><strong>Variable:</strong> near-surface air temperature (<code>tas</code>), monthly. If we have time, we might add precipitation (<code>pr</code>) too.</li>
-      <li><strong>Time and scenarios:</strong> the historical runs (1850 to 2014), plus four future scenarios that go to 2100: SSP1-2.6, SSP2-4.5, SSP3-7.0, and SSP5-8.5.</li>
-      <li><strong>Models:</strong> 7 models that have all five of those runs: ACCESS-CM2, CanESM5, GFDL-ESM4, IPSL-CM6A-LR, MIROC6, MPI-ESM1-2-LR, and MRI-ESM2-0.</li>
-      <li><strong>Regions:</strong> the 46 IPCC land regions, and maybe a few cities using the closest grid cell.</li>
-    </ul>
-    <p>
-      The raw data is way too big for a browser, so we shrank it down first. We averaged the monthly data into yearly
-      values, averaged the grid cells inside each region (weighted by latitude), and measured everything as warming
-      compared to 1850-1900. Then we used the median of the 7 models as the main line, kept the min and max as the
-      uncertainty range, and smoothed it over 10 years. All of that ends up in one CSV that D3 can load
-      (<a href="analysis/preprocessing.ipynb">preprocessing.ipynb</a>).
-    </p>
+    <table>
+      <thead><tr><th>Aspect</th><th>What we use</th></tr></thead>
+      <tbody>
+        <tr><td>Variable</td><td>Near-surface air temperature (<code>tas</code>), monthly. Possibly precipitation (<code>pr</code>) later</td></tr>
+        <tr><td>Time</td><td>1850 to 2014 (historical) and 2015 to 2100 (future)</td></tr>
+        <tr><td>Scenarios</td><td>SSP1-2.6 (low emissions), SSP2-4.5 (middle), SSP3-7.0 (high), SSP5-8.5 (very high)</td></tr>
+        <tr><td>Models</td><td>7 models: ACCESS-CM2, CanESM5, GFDL-ESM4, IPSL-CM6A-LR, MIROC6, MPI-ESM1-2-LR, MRI-ESM2-0</td></tr>
+        <tr><td>Regions</td><td>46 IPCC AR6 land regions, possibly a few cities (nearest grid cell)</td></tr>
+      </tbody>
+    </table>
+    <p><strong>How we processed it</strong> (<a href="analysis/preprocessing.ipynb">preprocessing.ipynb</a>):</p>
+    <ol>
+      <li>Converted temperature from Kelvin to °C and averaged it by year.</li>
+      <li>Averaged the grid cells in each region, weighted by latitude.</li>
+      <li>Measured warming compared to each model's 1850-1900 average.</li>
+      <li>Took the median of the 7 models, plus the min and max as the range.</li>
+      <li>Smoothed with a 10-year rolling average and saved everything as one CSV for D3.</li>
+    </ol>
   </section>
 
   <section>
     <h2>What we intend to do</h2>
     <p>
-      For the final project, we want to turn our Project 3 chart into an explorable explanation: basically a
-      scrolling article where the charts change as you read.
+      We will build an explorable explanation: a scrolling web page where text and interactive D3 charts explain
+      future warming step by step.
     </p>
+    <ul>
+      <li><strong>And:</strong> The world has already warmed, and every region has the same past. The page starts with warming stripes for the reader's region.</li>
+      <li><strong>But:</strong> After 2015, the future splits into four emissions scenarios, and the difference is large. In some regions, the highest scenario means almost 6°C more warming than the lowest.</li>
+      <li><strong>Therefore:</strong> Our emissions choices decide when, or if, each region passes thresholds like +2°C.</li>
+    </ul>
     <p>
-      The story goes like this. The world has already warmed, and every region has the same history up to now. But
-      after 2015, the future splits depending on how much we keep emitting, and the gap is big. In some regions, the
-      worst-case scenario means almost 6°C more warming than the best case. So the choices we make now decide when
-      (or if) a place crosses lines like +2°C.
+      Readers choose their region at the start, and the later charts update to show that region. Planned interactions:
+      a map with a year slider, scenario toggles, a +2°C threshold slider, and hover tooltips showing the model range.
     </p>
-    <p>
-      To make it personal, readers pick their own region at the start, and the rest of the charts follow that choice.
-      We're planning a map with a year slider, buttons to turn scenarios on and off, a threshold slider for seeing
-      when a region hits +2°C, and hover tooltips that show the range across models. Project 3 was one chart; this
-      time we want it to feel like a story with a clear takeaway at the end.
-    </p>
+    <p>Project 3 was a single chart. This project adds a map, a story, personalization, and annotations.</p>
   </section>
 
   <section>
