@@ -17,47 +17,43 @@
   <section>
     <h2>Dataset</h2>
     <p>
-      We will use <strong>CMIP6</strong> (Coupled Model Intercomparison Project, Phase 6) from the NOAA public
-      dataset on Google Cloud, one of the Project 3 datasets. CMIP6 holds simulations from climate models run by
-      research centers worldwide under a shared set of experiments.
+      We're sticking with CMIP6, the climate model dataset we used for Project 3. It comes from NOAA's public bucket
+      on Google Cloud and has simulations from climate models built by research groups all over the world, all run
+      under the same set of scenarios.
     </p>
-    <table>
-      <thead><tr><th>Aspect</th><th>What we use</th></tr></thead>
-      <tbody>
-        <tr><td>Variable</td><td><code>tas</code>, near-surface air temperature, monthly (<code>Amon</code>); precipitation (<code>pr</code>) as a possible second measure</td></tr>
-        <tr><td>Experiments</td><td><code>historical</code> (1850 to 2014) + four future scenarios (2015 to 2100): SSP1-2.6, SSP2-4.5, SSP3-7.0, SSP5-8.5</td></tr>
-        <tr><td>Models</td><td>7 models with all five experiments: ACCESS-CM2, CanESM5, GFDL-ESM4, IPSL-CM6A-LR, MIROC6, MPI-ESM1-2-LR, MRI-ESM2-0 (member r1i1p1f1)</td></tr>
-        <tr><td>Space</td><td>46 IPCC AR6 land regions, plus a few cities snapped to the nearest grid cell</td></tr>
-      </tbody>
-    </table>
+    <p>Here's the part of it we're using:</p>
+    <ul>
+      <li><strong>Variable:</strong> near-surface air temperature (<code>tas</code>), monthly. If we have time, we might add precipitation (<code>pr</code>) too.</li>
+      <li><strong>Time and scenarios:</strong> the historical runs (1850 to 2014), plus four future scenarios that go to 2100: SSP1-2.6, SSP2-4.5, SSP3-7.0, and SSP5-8.5.</li>
+      <li><strong>Models:</strong> 7 models that have all five of those runs: ACCESS-CM2, CanESM5, GFDL-ESM4, IPSL-CM6A-LR, MIROC6, MPI-ESM1-2-LR, and MRI-ESM2-0.</li>
+      <li><strong>Regions:</strong> the 46 IPCC land regions, and maybe a few cities using the closest grid cell.</li>
+    </ul>
     <p>
-      <strong>Processing:</strong> Kelvin to °C, monthly to annual means, cos(latitude)-weighted region averages,
-      years capped at 2100, warming relative to each model's 1850-1900 mean, median plus min/max across models,
-      and a 10-year rolling mean. The result is a small CSV (region, scenario, year, median, low, high) that D3
-      loads directly. Code: <a href="analysis/preprocessing.ipynb">preprocessing.ipynb</a>.
+      The raw data is way too big for a browser, so we shrank it down first. We averaged the monthly data into yearly
+      values, averaged the grid cells inside each region (weighted by latitude), and measured everything as warming
+      compared to 1850-1900. Then we used the median of the 7 models as the main line, kept the min and max as the
+      uncertainty range, and smoothed it over 10 years. All of that ends up in one CSV that D3 can load
+      (<a href="analysis/preprocessing.ipynb">preprocessing.ipynb</a>).
     </p>
   </section>
 
   <section>
     <h2>What we intend to do</h2>
     <p>
-      We will build an explorable explanation: a scrolling article that walks readers through future warming,
-      with interactive D3 graphics woven into the text.
-    </p>
-    <ul>
-      <li><strong>And:</strong> the planet has already warmed, and every region shares that same past. The article opens with a warming-stripes view of the reader's chosen region.</li>
-      <li><strong>But:</strong> after 2015 the future forks into four emissions paths, and the gap between them is huge. Some regions face nearly 6°C more warming under very high emissions than under low emissions.</li>
-      <li><strong>Therefore:</strong> the path we choose decides when, and whether, each region crosses key thresholds like +2°C.</li>
-    </ul>
-    <p>
-      Readers pick their region (from a map or a list) at the start, and every later graphic updates to that
-      region, so the story is about where they live. Planned interactions: a map that recolors as the reader drags
-      a year slider, scenario toggles, a +2°C threshold slider that shows when each region crosses it, and hover
-      details with the model range.
+      For the final project, we want to turn our Project 3 chart into an explorable explanation: basically a
+      scrolling article where the charts change as you read.
     </p>
     <p>
-      This builds on our Project 3 chart (one region, four paths) but reframes it as a guided story with a map,
-      personalization, and annotated takeaways instead of a single chart.
+      The story goes like this. The world has already warmed, and every region has the same history up to now. But
+      after 2015, the future splits depending on how much we keep emitting, and the gap is big. In some regions, the
+      worst-case scenario means almost 6°C more warming than the best case. So the choices we make now decide when
+      (or if) a place crosses lines like +2°C.
+    </p>
+    <p>
+      To make it personal, readers pick their own region at the start, and the rest of the charts follow that choice.
+      We're planning a map with a year slider, buttons to turn scenarios on and off, a threshold slider for seeing
+      when a region hits +2°C, and hover tooltips that show the range across models. Project 3 was one chart; this
+      time we want it to feel like a story with a clear takeaway at the end.
     </p>
   </section>
 
