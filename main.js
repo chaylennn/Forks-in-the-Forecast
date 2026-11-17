@@ -111,7 +111,7 @@ d3.csv("data/climate_paths.csv", d3.autoType).then(raw => {
     const rank = gaps.findIndex(d => d.region === r) + 1;
     const rankText = rank === 1 ? "the largest gap" : `the ${ordinal(rank)} largest gap`;
     d3.select("#takeaway").html(
-      `<strong>Therefore:</strong> in ${pretty(r)}, taking the low path instead of the very high one avoids about ` +
+      `In ${pretty(r)}, taking the low path instead of the very high one avoids about ` +
       `<strong>${(hi - lo).toFixed(1)}°C</strong> of warming by the end of the century (${fmt(lo)}°C instead of ${fmt(hi)}°C). ` +
       `That is ${rankText} of all ${gaps.length} regions. The future is not fixed: the path we choose still matters.`);
   }
