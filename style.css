@@ -91,3 +91,10 @@ a { color: #2b6cb0; }
   .hook { font-size: 18px; }
   .step h2 { font-size: 23px; }
 }
+
+/* scroll effects: sections fade up as they come into view */
+.step { opacity: 0; transform: translateY(28px); transition: opacity 0.8s ease, transform 0.8s ease; }
+.step.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .step { opacity: 1; transform: none; transition: none; }
+}

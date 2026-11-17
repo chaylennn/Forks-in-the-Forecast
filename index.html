@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Forks in the Forecast</title>
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
@@ -13,8 +13,9 @@
     <p class="kicker">DSC 106 Final Project · Prototype</p>
     <h1>Forks in the Forecast</h1>
     <p class="hook">
-      By 2100, the place you live could be about 2°C warmer than it was in the late 1800s. Or it could be 6°C warmer.
-      Which one happens depends on choices the world is making right now.
+      The last ice age, when thick ice sheets covered much of North America and northern Europe, was only about
+      6°C (11°F) colder than the late 1800s. By 2100, the place you live could warm by that much again. Or by just a third of it. What we do now
+      decides which.
     </p>
     <p class="team">Chaylen Nguyen-Tran, Jeffrey Kang, Peter Little, Jayleen Shang</p>
   </header>
@@ -28,7 +29,7 @@
 
   <main>
     <!-- AND -->
-    <section class="step">
+    <section class="step" data-chart="stripes">
       <p class="beat">1 · The past</p>
       <h2>Every region shares the same past</h2>
       <p>
@@ -40,7 +41,7 @@
     </section>
 
     <!-- BUT -->
-    <section class="step">
+    <section class="step" data-chart="fork">
       <p class="beat">2 · The fork</p>
       <h2>After 2015, the future forks</h2>
       <p>
@@ -54,7 +55,7 @@
     </section>
 
     <!-- BUT (threshold) -->
-    <section class="step">
+    <section class="step" data-chart="threshold">
       <p class="beat">3 · The thresholds</p>
       <h2>The path decides when a line is crossed</h2>
       <p>
@@ -71,7 +72,7 @@
     </section>
 
     <!-- THEREFORE -->
-    <section class="step">
+    <section class="step" data-chart="cost">
       <p class="beat">4 · The choice</p>
       <h2>The cost of the path we choose</h2>
       <p>
@@ -118,6 +119,6 @@
   <div id="tooltip"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0"></script>
-  <script src="main.js?v=2"></script>
+  <script src="main.js?v=3"></script>
 </body>
 </html>

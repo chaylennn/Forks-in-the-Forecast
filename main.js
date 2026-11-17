@@ -43,6 +43,10 @@ const futures = ["ssp126", "ssp245", "ssp370", "ssp585"];
 const fmt = d3.format("+.1f");
 const W = 850;
 
+// charts animate the first time they scroll into view
+const revealed = { stripes: false, fork: false, threshold: false, cost: false };
+const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 const state = { region: "W.North-America", active: new Set(["historical", ...futures]), threshold: 2 };
 const tooltip = d3.select("#tooltip");
 
@@ -117,6 +121,25 @@ d3.csv("data/climate_paths.csv", d3.autoType).then(raw => {
   }
 
   setRegion(state.region);
+
+  // scroll effects: fade each section in and play its chart animation once
+  const charts = { stripes, fork, threshold, cost };
+  const steps = document.querySelectorAll(".step");
+  if (!("IntersectionObserver" in window) || reduceMotion) {
+    steps.forEach(el => el.classList.add("in"));
+    Object.values(charts).forEach(c => c.reveal(false));
+  } else {
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("in");
+        const c = charts[entry.target.dataset.chart];
+        if (c) setTimeout(() => c.reveal(true), 250);
+        io.unobserve(entry.target);
+      });
+    }, { threshold: 0.2 });
+    steps.forEach(el => io.observe(el));
+  }
 });
 
 const ordinal = n => n + (["th", "st", "nd", "rd"][(n % 100 - 20) % 10] || ["th", "st", "nd", "rd"][n % 100] || "th");
@@ -132,7 +155,8 @@ function buildStripes(rowsFor) {
 
   function update() {
     const rows = rowsFor(state.region, "historical").filter(d => d.year <= 2014);
-    bars.selectAll("rect").data(rows, d => d.year).join("rect")
+    bars.selectAll("rect").data(rows, d => d.year)
+      .join(enter => enter.append("rect").attr("opacity", revealed.stripes ? 1 : 0))
       .attr("x", d => x(d.year)).attr("width", x.bandwidth() + 0.5).attr("y", 0).attr("height", h)
       .on("mousemove", (e, d) => showTip(e, `<strong>${d.year}</strong><br>${fmt(d.median)}°C vs 1850-1900`))
       .on("mouseleave", hideTip)
@@ -142,7 +166,14 @@ function buildStripes(rowsFor) {
       `By 2014, ${pretty(state.region)} had already warmed about <strong>${fmt(last.median)}°C</strong> ` +
       `(10-year average). Every scenario starts from here.`);
   }
-  return { update };
+  // fill the stripes in year by year
+  function reveal(animate) {
+    revealed.stripes = true;
+    const r = bars.selectAll("rect");
+    if (!animate) { r.attr("opacity", 1); return; }
+    r.transition("reveal").delay((d, i) => i * 9).duration(250).attr("opacity", 1);
+  }
+  return { update, reveal };
 }
 
 // ---------- 2. the fork: lines + model-range bands ----------
@@ -159,6 +190,11 @@ function buildFork(rowsFor) {
     .attr("stroke", "#999").attr("stroke-dasharray", "4 4");
   g.append("text").attr("x", x(2015) + 5).attr("y", 12).attr("font-size", 12).attr("fill", "#666").text("Paths split");
   const ref = g.append("g"), plot = g.append("g");
+
+  // clip used to "draw" the chart left to right on first view
+  const clipRect = d3.select(g.node().ownerSVGElement).append("defs").append("clipPath").attr("id", "fork-clip")
+    .append("rect").attr("x", -2).attr("y", -20).attr("height", h + 40).attr("width", revealed.fork ? w + 90 : 0);
+  plot.attr("clip-path", "url(#fork-clip)");
 
   const area = d3.area().x(d => x(d.year)).y0(d => y(d.low)).y1(d => y(d.high));
   const line = d3.line().x(d => x(d.year)).y(d => y(d.median));
@@ -227,7 +263,15 @@ function buildFork(rowsFor) {
       `By 2100, ${pretty(state.region)} reaches about <strong>${fmt(lo.median)}°C</strong> on the low path ` +
       `and <strong>${fmt(hi.median)}°C</strong> on the very high path. Same past, very different futures.`);
   }
-  return { update };
+  // draw the shared past first, pause at the fork, then let the four paths branch out
+  function reveal(animate) {
+    revealed.fork = true;
+    if (!animate) { clipRect.attr("width", w + 90); return; }
+    clipRect.attr("width", 0)
+      .transition().duration(1400).ease(d3.easeCubicOut).attr("width", x(2015))
+      .transition().delay(300).duration(2200).ease(d3.easeCubicInOut).attr("width", w + 90);
+  }
+  return { update, reveal };
 }
 
 // ---------- 3. threshold timeline ----------
@@ -263,7 +307,13 @@ function buildThreshold(crossing) {
       e.append("text").attr("font-size", 12).attr("font-weight", 600).attr("dy", -12).attr("text-anchor", "middle");
       return e;
     });
-    sel.attr("transform", d => `translate(${px(d)},${y(d.k) + y.bandwidth() / 2})`)
+    const pos = d => `translate(${px(d)},${y(d.k) + y.bandwidth() / 2})`;
+    if (!revealed.threshold) {
+      sel.attr("opacity", 0).attr("transform", d => `translate(${x(2015)},${y(d.k) + y.bandwidth() / 2})`);
+    } else {
+      sel.attr("opacity", 1).transition().duration(350).attr("transform", pos);
+    }
+    sel
       .on("mousemove", (e, d) => showTip(e, `${names[d.k]}: ` +
         (d.year == null ? `does not reach ${fmt(t)}°C by 2100` : `reaches ${fmt(t)}°C in ${d.year}`)))
       .on("mouseleave", hideTip);
@@ -279,7 +329,21 @@ function buildThreshold(crossing) {
     else note = `On the very high path, ${pretty(state.region)} reaches ${fmt(t)}°C around ${hi.year}. On the low path, around ${lo.year}.`;
     d3.select("#threshold-note").text(note);
   }
-  return { update };
+  // dots start at the 2015 split and slide out to their years
+  function reveal(animate) {
+    revealed.threshold = true;
+    const sel = dots.selectAll("g.dot");
+    const t = state.threshold;
+    const place = d => {
+      const yr = crossing(state.region, d.k, t);
+      const px = yr == null ? neverX : x(Math.max(1950, yr));
+      return `translate(${px},${y(d.k) + y.bandwidth() / 2})`;
+    };
+    if (!animate) { sel.attr("opacity", 1).attr("transform", place); return; }
+    sel.transition("reveal").delay((d, i) => i * 180).duration(900).ease(d3.easeCubicOut)
+      .attr("opacity", 1).attr("transform", place);
+  }
+  return { update, reveal };
 }
 
 // ---------- 4. cost of the path: ranking of all regions ----------
@@ -292,12 +356,12 @@ function buildCost(gaps) {
   const yAx = g.append("g").call(d3.axisLeft(y).tickFormat(pretty).tickSize(0)).call(a => a.select(".domain").remove());
   yAx.selectAll("text").attr("font-size", 10);
   const bars = g.selectAll("rect").data(gaps).join("rect")
-    .attr("y", d => y(d.region)).attr("height", y.bandwidth()).attr("x", 0).attr("width", d => x(d.gap))
+    .attr("y", d => y(d.region)).attr("height", y.bandwidth()).attr("x", 0).attr("width", 0)
     .on("mousemove", (e, d) => showTip(e, `<strong>${pretty(d.region)}</strong><br>+${d.gap.toFixed(1)}°C more warming on the very high path`))
     .on("mouseleave", hideTip);
   const val = g.selectAll(".val").data(gaps).join("text").attr("class", "val")
     .attr("x", d => x(d.gap) + 4).attr("y", d => y(d.region) + y.bandwidth() / 2 + 3)
-    .attr("font-size", 10).text(d => d.gap.toFixed(1));
+    .attr("font-size", 10).attr("opacity", 0).text(d => d.gap.toFixed(1));
 
   function update() {
     const sel = d => d.region === state.region;
@@ -306,5 +370,12 @@ function buildCost(gaps) {
     yAx.selectAll("text").attr("font-weight", r => r === state.region ? 700 : 400)
       .attr("fill", r => r === state.region ? "#a50026" : "#333");
   }
-  return { update };
+  // bars grow from zero, top to bottom
+  function reveal(animate) {
+    revealed.cost = true;
+    if (!animate) { bars.attr("width", d => x(d.gap)); val.attr("opacity", 1); return; }
+    bars.transition("grow").delay((d, i) => i * 25).duration(600).ease(d3.easeCubicOut).attr("width", d => x(d.gap));
+    val.transition("grow").delay((d, i) => i * 25 + 400).duration(300).attr("opacity", 1);
+  }
+  return { update, reveal };
 }
