@@ -4,114 +4,120 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Forks in the Forecast</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=1">
 </head>
 <body>
-  <header>
-    <p class="kicker">DSC 106 Final Project Proposal</p>
+
+  <!-- HOOK -->
+  <header class="hero">
+    <p class="kicker">DSC 106 Final Project · Prototype</p>
     <h1>Forks in the Forecast</h1>
-    <p class="question">How much hotter will your part of the world get, and how much of that is still up to us?</p>
+    <p class="hook">
+      By 2100, the place you live could be about 2°C warmer than it was in the late 1800s. Or it could be 6°C warmer.
+      Which one happens depends on choices the world is making right now.
+    </p>
     <p class="team">Chaylen Nguyen-Tran, Jeffrey Kang, Peter Little, Jayleen Shang</p>
   </header>
 
-  <section>
-    <h2>Dataset</h2>
-    <p>
-      We are using <strong>CMIP6</strong> (Coupled Model Intercomparison Project, Phase 6), one of the Project 3
-      datasets. It contains global climate model simulations produced by research centers around the world under the
-      World Climate Research Programme, including temperature, precipitation, and greenhouse gas projections across
-      multiple climate scenarios.
-    </p>
-    <p>
-      <strong>Source:</strong>
-      <a href="https://console.cloud.google.com/marketplace/product/noaa-public/cmip6">NOAA Public CMIP6 Dataset on Google Cloud Marketplace</a>.
-      We load the data from Google Cloud's public repository, starting from the course's
-      <a href="https://github.com/dsc-courses/dsc106-2025-fa/blob/main/lectures/climate-lecture/CMIP%20basic_search_and_load-colab.ipynb">CMIP6 example notebook</a>.
-    </p>
-    <table>
-      <thead><tr><th>Aspect</th><th>What we use</th></tr></thead>
-      <tbody>
-        <tr><td>Variable</td><td>Near-surface air temperature (<code>tas</code>), monthly. Possibly precipitation (<code>pr</code>) later</td></tr>
-        <tr><td>Time</td><td>1850 to 2014 (historical) and 2015 to 2100 (future)</td></tr>
-        <tr><td>Scenarios</td><td>SSP1-2.6 (low emissions), SSP2-4.5 (middle), SSP3-7.0 (high), SSP5-8.5 (very high)</td></tr>
-        <tr><td>Models</td><td>7 models: ACCESS-CM2, CanESM5, GFDL-ESM4, IPSL-CM6A-LR, MIROC6, MPI-ESM1-2-LR, MRI-ESM2-0</td></tr>
-        <tr><td>Regions</td><td>46 IPCC AR6 land regions, possibly a few cities (nearest grid cell)</td></tr>
-      </tbody>
-    </table>
-    <p><strong>How we processed it</strong> (<a href="analysis/preprocessing.ipynb">preprocessing.ipynb</a>):</p>
-    <ol>
-      <li>Converted temperature from Kelvin to °C and averaged it by year.</li>
-      <li>Averaged the grid cells in each region, weighted by latitude.</li>
-      <li>Measured warming compared to each model's 1850-1900 average.</li>
-      <li>Took the median of the 7 models, plus the min and max as the range.</li>
-      <li>Smoothed with a 10-year rolling average and saved everything as one CSV for D3.</li>
-    </ol>
-  </section>
+  <!-- REGION PICKER (sticky so every chart follows it) -->
+  <div class="picker" id="picker">
+    <label for="region-select">Your region:</label>
+    <select id="region-select"></select>
+    <span class="quick" id="quick-picks"></span>
+  </div>
 
-  <section>
-    <h2>What we intend to do</h2>
-    <p>
-      We’re building an interactive page that shows how much warmer the world could become by 2100, and how much of
-      that outcome depends on the choices we make now. Climate change can seem too large and distant, so we want to
-      present it in a way that feels more personal and easy to follow.
-    </p>
-    <p>
-      The page will tell a story as the reader scrolls. It opens with the warming that has already happened, which is
-      common history that every region shares. From there, the future splits into four paths, determined by how much
-      we continue to emit. In some regions, the difference between the best and worst path is nearly 6°C. By the end,
-      readers should be able to acknowledge that our collective choices determine whether, or when, their own region
-      hits major thresholds like +2°C.
-    </p>
-    <p>
-      To start the experience, readers will select their region, and every chart on the page updates to match.
-      Planned features include a map with a year slider, buttons to switch between the four scenarios, a slider that
-      shows when a region crosses a chosen level of warming, and hover tooltips with more detail. Together, these
-      features show readers what their region could face, and how much of that is still up to us.
-    </p>
-  </section>
+  <main>
+    <!-- AND -->
+    <section class="step">
+      <p class="beat">And</p>
+      <h2>Every region shares the same past</h2>
+      <p>
+        Each stripe below is one year in <strong class="region-name"></strong>, from 1850 to 2014. Blue years were cooler
+        than the late-1800s average, and red years were warmer. Notice how the stripes turn red as human emissions grow.
+      </p>
+      <div id="stripes" class="chart"></div>
+      <p class="callout" id="stripes-note"></p>
+    </section>
 
-  <section>
-    <h2>Static visualizations</h2>
-    <p>
-      All six use our processed CMIP6 data (7-model median, warming vs 1850-1900). Each maps to a step in the story.
-      Code: <a href="analysis/static_figures.py">static_figures.py</a>.
-    </p>
+    <!-- BUT -->
+    <section class="step">
+      <p class="beat">But</p>
+      <h2>After 2015, the future forks</h2>
+      <p>
+        Climate scientists run their models under four "what if" scenarios, from cutting emissions quickly (green) to
+        relying heavily on fossil fuels (dark red). The gray line is the shared past. Turn paths on or off to compare them,
+        and hover to see the values for any year.
+      </p>
+      <div id="scenario-toggles"></div>
+      <div id="fork" class="chart"></div>
+      <p class="callout" id="fork-note"></p>
+    </section>
 
-    <figure>
-      <h3>1. Warming stripes: one past, four futures</h3>
-      <p>Each stripe is one year in Western North America, colored by warming, and the rows split by scenario after 2015.</p>
-      <img src="images/fig1_stripes.png" alt="Warming stripes for Western North America under four scenarios">
-    </figure>
+    <!-- BUT (threshold) -->
+    <section class="step">
+      <p class="beat">But</p>
+      <h2>The path decides when a line is crossed</h2>
+      <p>
+        Drag the slider to pick a warming level. Each dot shows the year <strong class="region-name"></strong> first
+        reaches it under each scenario. Scientists treat +2°C as a key danger point, where heat waves and droughts get
+        much worse.
+      </p>
+      <div class="slider-row">
+        <label for="threshold">Warming level: <strong id="threshold-value">+2.0°C</strong></label>
+        <input type="range" id="threshold" min="1" max="6" step="0.5" value="2">
+      </div>
+      <div id="threshold-chart" class="chart"></div>
+      <p class="callout" id="threshold-note"></p>
+    </section>
 
-    <figure>
-      <h3>2. The fork after 2015</h3>
-      <p>Land regions have already warmed about 1.2°C, and by 2100 the paths range from about 2°C to 6°C.</p>
-      <img src="images/fig2_land_paths.png" alt="Average land warming paths with model range">
-    </figure>
+    <!-- THEREFORE -->
+    <section class="step">
+      <p class="beat">Therefore</p>
+      <h2>The cost of the path we choose</h2>
+      <p>
+        This is how much extra warming each region gets by 2081-2100 if the world takes the very high path instead of the
+        low one. Your region is highlighted. Hover a bar for its value.
+      </p>
+      <div id="cost" class="chart"></div>
+      <p class="callout takeaway" id="takeaway"></p>
+    </section>
 
-    <figure>
-      <h3>3. Same scenarios, different regions</h3>
-      <p>Under the same scenarios, Arctic and northern regions warm far more than the tropics.</p>
-      <img src="images/fig3_regions.png" alt="Warming paths for six contrasting regions">
-    </figure>
+    <!-- PROTOTYPE WRITE-UP -->
+    <section class="writeup">
+      <h2>Prototype write-up</h2>
 
-    <figure>
-      <h3>4. When do thresholds arrive?</h3>
-      <p>In Western North America, +3°C never arrives by 2100 under SSP1-2.6, but +4°C arrives in the 2060s under SSP5-8.5.</p>
-      <img src="images/fig4_thresholds.png" alt="Year each warming threshold is reached in Western North America">
-    </figure>
+      <h3>What have we done so far?</h3>
+      <p>
+        We processed CMIP6 temperature data from 7 climate models into one CSV with yearly warming for 46 IPCC land
+        regions under the historical runs and four future scenarios. We laid out the full structure of our explorable
+        explanation, following an and-but-therefore story: the shared past, the fork after 2015, the thresholds each
+        path crosses, and the cost of choosing the high-emissions path. We built rough versions of four linked D3 charts:
+        warming stripes, the forking line chart with model ranges, a threshold timeline, and a ranking of all regions.
+        Every chart updates when the reader picks a region, and we added interactions like scenario toggles, hover
+        tooltips, a warming-level slider, and short summary text that changes with the region.
+      </p>
 
-    <figure>
-      <h3>5. The cost of the path</h3>
-      <p>Taking the very high path instead of the low path adds about 1.8°C to 6°C of late-century warming, depending on the region.</p>
-      <img src="images/fig5_cost.png" alt="Extra warming under SSP5-8.5 vs SSP1-2.6 by region" class="tall">
-    </figure>
+      <h3>What will be the most challenging part to design, and why?</h3>
+      <p>
+        The hardest part will be making the story feel personal and easy to follow without asking readers to read too
+        much text. Right now the page explains a lot in paragraphs, and we want more of that to come from annotations
+        and scroll-triggered changes on the charts themselves. Another challenge is showing uncertainty honestly: the
+        models disagree, especially in high-latitude regions, and we need the shaded ranges to inform readers without
+        overwhelming them. We also want to add a map so readers can pick their region by location, which means drawing
+        the IPCC region boundaries in D3 and keeping it in sync with the other charts. Finally, we need to keep all four
+        charts fast and consistent when the region, scenarios, or slider change at the same time.
+      </p>
 
-    <figure>
-      <h3>6. How fast it is warming</h3>
-      <p>Warming speeds up from about 0.16°C per decade historically to 0.23 to 0.49°C per decade by 2060, depending on the path.</p>
-      <img src="images/fig6_rate.png" alt="Warming rate per decade, past vs future scenarios">
-    </figure>
-  </section>
+      <p class="links">
+        <a href="proposal.html">Our proposal</a> ·
+        Data: <a href="https://console.cloud.google.com/marketplace/product/noaa-public/cmip6">NOAA Public CMIP6 Dataset</a>
+      </p>
+    </section>
+  </main>
+
+  <div id="tooltip"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0"></script>
+  <script src="main.js?v=1"></script>
 </body>
 </html>

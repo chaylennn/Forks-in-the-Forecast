@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forks in the Forecast</title>
+  <link rel="stylesheet" href="proposal.css">
+</head>
+<body>
+  <header>
+    <p class="kicker">DSC 106 Final Project Proposal</p>
+    <h1>Forks in the Forecast</h1>
+    <p class="question">How much hotter will your part of the world get, and how much of that is still up to us?</p>
+    <p class="team">Chaylen Nguyen-Tran, Jeffrey Kang, Peter Little, Jayleen Shang</p>
+  </header>
+
+  <section>
+    <h2>Dataset</h2>
+    <p>
+      We are using <strong>CMIP6</strong> (Coupled Model Intercomparison Project, Phase 6), one of the Project 3
+      datasets. It contains global climate model simulations produced by research centers around the world under the
+      World Climate Research Programme, including temperature, precipitation, and greenhouse gas projections across
+      multiple climate scenarios.
+    </p>
+    <p>
+      <strong>Source:</strong>
+      <a href="https://console.cloud.google.com/marketplace/product/noaa-public/cmip6">NOAA Public CMIP6 Dataset on Google Cloud Marketplace</a>.
+      We load the data from Google Cloud's public repository, starting from the course's
+      <a href="https://github.com/dsc-courses/dsc106-2025-fa/blob/main/lectures/climate-lecture/CMIP%20basic_search_and_load-colab.ipynb">CMIP6 example notebook</a>.
+    </p>
+    <table>
+      <thead><tr><th>Aspect</th><th>What we use</th></tr></thead>
+      <tbody>
+        <tr><td>Variable</td><td>Near-surface air temperature (<code>tas</code>), monthly. Possibly precipitation (<code>pr</code>) later</td></tr>
+        <tr><td>Time</td><td>1850 to 2014 (historical) and 2015 to 2100 (future)</td></tr>
+        <tr><td>Scenarios</td><td>SSP1-2.6 (low emissions), SSP2-4.5 (middle), SSP3-7.0 (high), SSP5-8.5 (very high)</td></tr>
+        <tr><td>Models</td><td>7 models: ACCESS-CM2, CanESM5, GFDL-ESM4, IPSL-CM6A-LR, MIROC6, MPI-ESM1-2-LR, MRI-ESM2-0</td></tr>
+        <tr><td>Regions</td><td>46 IPCC AR6 land regions, possibly a few cities (nearest grid cell)</td></tr>
+      </tbody>
+    </table>
+    <p><strong>How we processed it</strong> (<a href="analysis/preprocessing.ipynb">preprocessing.ipynb</a>):</p>
+    <ol>
+      <li>Converted temperature from Kelvin to °C and averaged it by year.</li>
+      <li>Averaged the grid cells in each region, weighted by latitude.</li>
+      <li>Measured warming compared to each model's 1850-1900 average.</li>
+      <li>Took the median of the 7 models, plus the min and max as the range.</li>
+      <li>Smoothed with a 10-year rolling average and saved everything as one CSV for D3.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>What we intend to do</h2>
+    <p>
+      We’re building an interactive page that shows how much warmer the world could become by 2100, and how much of
+      that outcome depends on the choices we make now. Climate change can seem too large and distant, so we want to
+      present it in a way that feels more personal and easy to follow.
+    </p>
+    <p>
+      The page will tell a story as the reader scrolls. It opens with the warming that has already happened, which is
+      common history that every region shares. From there, the future splits into four paths, determined by how much
+      we continue to emit. In some regions, the difference between the best and worst path is nearly 6°C. By the end,
+      readers should be able to acknowledge that our collective choices determine whether, or when, their own region
+      hits major thresholds like +2°C.
+    </p>
+    <p>
+      To start the experience, readers will select their region, and every chart on the page updates to match.
+      Planned features include a map with a year slider, buttons to switch between the four scenarios, a slider that
+      shows when a region crosses a chosen level of warming, and hover tooltips with more detail. Together, these
+      features show readers what their region could face, and how much of that is still up to us.
+    </p>
+  </section>
+
+  <section>
+    <h2>Static visualizations</h2>
+    <p>
+      All six use our processed CMIP6 data (7-model median, warming vs 1850-1900). Each maps to a step in the story.
+      Code: <a href="analysis/static_figures.py">static_figures.py</a>.
+    </p>
+
+    <figure>
+      <h3>1. Warming stripes: one past, four futures</h3>
+      <p>Each stripe is one year in Western North America, colored by warming, and the rows split by scenario after 2015.</p>
+      <img src="images/fig1_stripes.png" alt="Warming stripes for Western North America under four scenarios">
+    </figure>
+
+    <figure>
+      <h3>2. The fork after 2015</h3>
+      <p>Land regions have already warmed about 1.2°C, and by 2100 the paths range from about 2°C to 6°C.</p>
+      <img src="images/fig2_land_paths.png" alt="Average land warming paths with model range">
+    </figure>
+
+    <figure>
+      <h3>3. Same scenarios, different regions</h3>
+      <p>Under the same scenarios, Arctic and northern regions warm far more than the tropics.</p>
+      <img src="images/fig3_regions.png" alt="Warming paths for six contrasting regions">
+    </figure>
+
+    <figure>
+      <h3>4. When do thresholds arrive?</h3>
+      <p>In Western North America, +3°C never arrives by 2100 under SSP1-2.6, but +4°C arrives in the 2060s under SSP5-8.5.</p>
+      <img src="images/fig4_thresholds.png" alt="Year each warming threshold is reached in Western North America">
+    </figure>
+
+    <figure>
+      <h3>5. The cost of the path</h3>
+      <p>Taking the very high path instead of the low path adds about 1.8°C to 6°C of late-century warming, depending on the region.</p>
+      <img src="images/fig5_cost.png" alt="Extra warming under SSP5-8.5 vs SSP1-2.6 by region" class="tall">
+    </figure>
+
+    <figure>
+      <h3>6. How fast it is warming</h3>
+      <p>Warming speeds up from about 0.16°C per decade historically to 0.23 to 0.49°C per decade by 2060, depending on the path.</p>
+      <img src="images/fig6_rate.png" alt="Warming rate per decade, past vs future scenarios">
+    </figure>
+  </section>
+</body>
+</html>

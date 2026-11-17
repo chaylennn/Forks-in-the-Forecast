@@ -1,26 +1,93 @@
-body {
-  font-family: system-ui, sans-serif;
-  max-width: 900px;
-  margin: 40px auto;
-  padding: 0 16px;
-  color: #222;
-  line-height: 1.55;
-  background: #fff;
+:root {
+  --ink: #1f2328;
+  --muted: #5b636b;
+  --line: #e3e5e8;
+  --bg: #ffffff;
+  --soft: #f6f7f8;
+  --accent: #a50026;
 }
-header { border-bottom: 1px solid #ddd; padding-bottom: 16px; margin-bottom: 8px; }
-.kicker { color: #a50026; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; margin: 0; }
-h1 { font-size: 40px; margin: 4px 0 8px; }
-.question { font-size: 19px; color: #444; margin: 0 0 8px; }
-.team { color: #666; font-size: 14px; margin: 0; }
-h2 { font-size: 24px; margin-top: 40px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
-h3 { font-size: 18px; margin: 0 0 4px; }
-p, li { font-size: 15px; }
-table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 12px 0; }
-th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e5e5e5; vertical-align: top; }
-th { background: #f6f6f6; }
-code { background: #f3f3f3; padding: 1px 4px; border-radius: 3px; font-size: 13px; }
-figure { margin: 36px 0; }
-figure p { color: #555; margin: 0 0 10px; }
-figure img { width: 100%; height: auto; border: 1px solid #eee; border-radius: 6px; }
-figure img.tall { max-width: 620px; display: block; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.55;
+}
+main, .hero { max-width: 900px; margin: 0 auto; padding: 0 16px; }
+
+/* hook */
+.hero { padding-top: 56px; padding-bottom: 28px; }
+.kicker { color: var(--accent); font-weight: 700; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; margin: 0; }
+.hero h1 { font-size: 44px; line-height: 1.1; margin: 6px 0 14px; }
+.hook { font-size: 21px; line-height: 1.45; margin: 0 0 12px; max-width: 760px; }
+.team { color: var(--muted); font-size: 14px; margin: 0; }
+
+/* sticky region picker */
+.picker {
+  position: sticky; top: 0; z-index: 5;
+  background: rgba(255,255,255,0.96);
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  padding: 10px max(16px, calc((100% - 868px) / 2));
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+}
+.picker label { font-weight: 700; }
+.picker select { font-size: 15px; padding: 4px 8px; }
+.quick { font-size: 13px; color: var(--muted); }
+.pick {
+  border: none; background: none; padding: 0 4px; font-size: 13px;
+  color: #2b6cb0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+}
+.pick:hover { color: #1a4a80; }
+
+/* story steps */
+.step { padding: 48px 0 24px; border-bottom: 1px solid var(--line); }
+.beat {
+  display: inline-block; margin: 0 0 4px; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent);
+}
+.step h2 { font-size: 28px; margin: 0 0 10px; }
+.step p { font-size: 16px; max-width: 760px; }
+.chart { margin: 14px 0 6px; }
+.chart svg { width: 100%; height: auto; display: block; }
+.callout {
+  background: var(--soft); border-left: 4px solid var(--accent);
+  padding: 10px 14px; border-radius: 4px; font-size: 15px !important;
+}
+.takeaway { font-size: 17px !important; }
+
+/* scenario toggles */
+#scenario-toggles { margin: 6px 0 4px; }
+.toggle {
+  border: 2px solid var(--c); background: #fff; color: var(--c);
+  border-radius: 999px; padding: 4px 12px; margin: 0 6px 6px 0;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.toggle.on { background: var(--c); color: #fff; }
+
+/* slider */
+.slider-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 8px 0; }
+.slider-row input { width: min(320px, 100%); accent-color: var(--accent); }
+
+/* tooltip */
+#tooltip {
+  position: absolute; pointer-events: none; display: none; z-index: 10;
+  background: #fff; border: 1px solid #ccc; border-radius: 6px;
+  padding: 8px 10px; font-size: 13px; line-height: 1.45;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15); max-width: 340px;
+}
+#tooltip .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+
+/* write-up */
+.writeup { padding: 48px 0 72px; max-width: 800px; }
+.writeup h2 { font-size: 24px; }
+.writeup h3 { font-size: 17px; margin: 22px 0 6px; }
+.writeup p { font-size: 15px; }
+.links { color: var(--muted); font-size: 14px !important; margin-top: 24px; }
 a { color: #2b6cb0; }
+
+@media (max-width: 600px) {
+  .hero h1 { font-size: 34px; }
+  .hook { font-size: 18px; }
+  .step h2 { font-size: 23px; }
+}
