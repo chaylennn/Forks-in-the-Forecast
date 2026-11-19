@@ -29,6 +29,21 @@ const regionNames = {
 };
 const pretty = r => regionNames[r] || r.replace(/[.-]/g, " ");
 
+// regions grouped by part of the world for the dropdown
+const regionGroups = [
+  ["North America", ["W.North-America", "C.North-America", "E.North-America", "N.W.North-America", "N.E.North-America"]],
+  ["Central America & Caribbean", ["N.Central-America", "S.Central-America", "Caribbean"]],
+  ["South America", ["N.W.South-America", "N.South-America", "N.E.South-America", "South-American-Monsoon",
+    "S.W.South-America", "S.E.South-America", "S.South-America"]],
+  ["Europe", ["N.Europe", "West&Central-Europe", "E.Europe", "Mediterranean"]],
+  ["Africa", ["Sahara", "Western-Africa", "Central-Africa", "N.Eastern-Africa", "S.Eastern-Africa",
+    "W.Southern-Africa", "E.Southern-Africa", "Madagascar"]],
+  ["Asia", ["Arabian-Peninsula", "W.C.Asia", "E.C.Asia", "Tibetan-Plateau", "E.Asia", "S.Asia", "S.E.Asia",
+    "W.Siberia", "E.Siberia", "Russian-Far-East"]],
+  ["Oceania", ["N.Australia", "C.Australia", "E.Australia", "S.Australia", "New-Zealand"]],
+  ["Polar regions", ["Greenland/Iceland", "Russian-Arctic", "E.Antarctica", "W.Antarctica"]]
+];
+
 const colors = {
   historical: "#555", ssp126: "#1a9850", ssp245: "#fdae61",
   ssp370: "#f46d43", ssp585: "#a50026"
@@ -78,7 +93,15 @@ d3.csv("data/climate_paths.csv", d3.autoType).then(raw => {
 
   // region picker + quick picks
   const select = d3.select("#region-select");
-  select.selectAll("option").data(regions).join("option").attr("value", d => d).text(pretty);
+  // grouped by part of the world, alphabetical inside each group; anything unlisted goes in "Other"
+  const listed = new Set(regionGroups.flatMap(g => g[1]));
+  const groups = regionGroups.map(([name, rs]) => [name, rs.filter(r => regions.includes(r))]);
+  const other = regions.filter(r => !listed.has(r));
+  if (other.length) groups.push(["Other", other]);
+  select.selectAll("optgroup").data(groups.filter(g => g[1].length)).join("optgroup")
+    .attr("label", d => d[0])
+    .selectAll("option").data(d => [...d[1]].sort((a, b) => pretty(a).localeCompare(pretty(b))))
+    .join("option").attr("value", d => d).text(pretty);
   select.property("value", state.region).on("change", e => setRegion(e.target.value));
 
   const gaps = regions.map(r => ({ region: r, gap: late(r, "ssp585") - late(r, "ssp126") }))
@@ -95,9 +118,9 @@ d3.csv("data/climate_paths.csv", d3.autoType).then(raw => {
     .on("click", (e, d) => setRegion(d.region));
 
   const stripes = buildStripes(rowsFor);
-  const fork = buildFork(rowsFor);
+  const fork = buildFork(rowsFor, late);
   const threshold = buildThreshold(crossing);
-  const cost = buildCost(gaps);
+  const cost = buildCost(gaps, late);
 
   d3.select("#threshold").on("input", e => {
     state.threshold = +e.target.value;
@@ -177,7 +200,7 @@ function buildStripes(rowsFor) {
 }
 
 // ---------- 2. the fork: lines + model-range bands ----------
-function buildFork(rowsFor) {
+function buildFork(rowsFor, late) {
   const margin = { top: 20, right: 80, bottom: 36, left: 52 };
   const { g, w, h } = makeSvg("#fork", 440, margin);
   const x = d3.scaleLinear().domain([1850, 2100]).range([0, w]);
@@ -258,10 +281,10 @@ function buildFork(rowsFor) {
       .attr("fill", d => textColors[d.k]).text(d => shortNames[d.k])
       .transition().duration(500).attr("y", d => d.y);
 
-    const lo = rowsFor(state.region, "ssp126").at(-1), hi = rowsFor(state.region, "ssp585").at(-1);
+    const lo = late(state.region, "ssp126"), hi = late(state.region, "ssp585");
     d3.select("#fork-note").html(
-      `By 2100, ${pretty(state.region)} reaches about <strong>${fmt(lo.median)}°C</strong> on the low path ` +
-      `and <strong>${fmt(hi.median)}°C</strong> on the very high path. Same past, very different futures.`);
+      `By the end of the century (2081-2100 average), ${pretty(state.region)} is about <strong>${fmt(lo)}°C</strong> ` +
+      `warmer on the low path and <strong>${fmt(hi)}°C</strong> warmer on the very high path. Same past, very different futures.`);
   }
   // draw the shared past first, pause at the fork, then let the four paths branch out
   function reveal(animate) {
@@ -346,36 +369,101 @@ function buildThreshold(crossing) {
   return { update, reveal };
 }
 
-// ---------- 4. cost of the path: ranking of all regions ----------
-function buildCost(gaps) {
-  const margin = { top: 10, right: 50, bottom: 36, left: 200 };
-  const { g, w, h } = makeSvg("#cost", gaps.length * 15 + 46, margin);
-  const y = d3.scaleBand().domain(gaps.map(d => d.region)).range([0, h]).padding(0.2);
-  const x = d3.scaleLinear().domain([0, d3.max(gaps, d => d.gap)]).nice().range([0, w]);
-  g.append("g").attr("transform", `translate(0,${h})`).call(d3.axisBottom(x).tickFormat(d => d + "°C"));
-  const yAx = g.append("g").call(d3.axisLeft(y).tickFormat(pretty).tickSize(0)).call(a => a.select(".domain").remove());
-  yAx.selectAll("text").attr("font-size", 10);
-  const bars = g.selectAll("rect").data(gaps).join("rect")
-    .attr("y", d => y(d.region)).attr("height", y.bandwidth()).attr("x", 0).attr("width", 0)
-    .on("mousemove", (e, d) => showTip(e, `<strong>${pretty(d.region)}</strong><br>+${d.gap.toFixed(1)}°C more warming on the very high path`))
-    .on("mouseleave", hideTip);
-  const val = g.selectAll(".val").data(gaps).join("text").attr("class", "val")
-    .attr("x", d => x(d.gap) + 4).attr("y", d => y(d.region) + y.bandwidth() / 2 + 3)
-    .attr("font-size", 10).attr("opacity", 0).text(d => d.gap.toFixed(1));
+// ---------- 4. cost of the path: low vs very high warming per region ----------
+function buildCost(gaps, late) {
+  const all = gaps.map(d => ({ region: d.region, gap: d.gap, lo: late(d.region, "ssp126"), hi: late(d.region, "ssp585") }));
+  const x0 = d3.max(all, d => d.hi);
+  let showAll = false;
 
-  function update() {
-    const sel = d => d.region === state.region;
-    bars.transition().duration(300).attr("fill", d => sel(d) ? "#a50026" : "#d9d9d9");
-    val.attr("fill", d => sel(d) ? "#a50026" : "#888").attr("font-weight", d => sel(d) ? 700 : 400);
-    yAx.selectAll("text").attr("font-weight", r => r === state.region ? 700 : 400)
-      .attr("fill", r => r === state.region ? "#a50026" : "#333");
+  const btn = d3.select("#cost-toggle").on("click", () => {
+    showAll = !showAll;
+    btn.text(showAll ? "Show fewer regions" : `Show all ${all.length} regions`);
+    draw(false);
+  });
+
+  // short view: the 5 largest gaps, the 5 smallest, and the reader's region if it isn't already there
+  function rowsToShow() {
+    if (showAll) return all;
+    const top = all.slice(0, 5), bottom = all.slice(-5);
+    const mine = all.find(d => d.region === state.region);
+    const rows = [...top];
+    if (!top.includes(mine) && !bottom.includes(mine)) rows.push({ sep: "a" }, mine, { sep: "b" });
+    else rows.push({ sep: "a" });
+    return rows.concat(bottom);
   }
-  // bars grow from zero, top to bottom
+
+  function draw(animate) {
+    d3.select("#cost").selectAll("svg").remove();
+    const rows = rowsToShow();
+    const rowH = showAll ? 18 : 30, font = showAll ? 11 : 13;
+    const margin = { top: 34, right: 90, bottom: 36, left: showAll ? 190 : 220 };
+    const { g, w, h } = makeSvg("#cost", rows.length * rowH + margin.top + margin.bottom, margin);
+    const x = d3.scaleLinear().domain([0, x0]).nice().range([0, w]);
+    const y = (d, i) => i * rowH + rowH / 2;
+
+    // grid + axis
+    g.append("g").attr("transform", `translate(0,${h})`).call(d3.axisBottom(x).tickFormat(d => `+${d}°C`));
+    g.append("g").selectAll("line").data(x.ticks()).join("line")
+      .attr("x1", d => x(d)).attr("x2", d => x(d)).attr("y1", 0).attr("y2", h).attr("stroke", "#f0f0f0");
+    g.append("text").attr("x", w / 2).attr("y", h + 32).attr("text-anchor", "middle").attr("font-size", 12)
+      .attr("fill", "#555").text("Average warming in 2081-2100 vs 1850-1900");
+
+    // legend
+    const lg = g.append("g").attr("transform", "translate(0,-22)");
+    [["ssp126", "Low path"], ["ssp585", "Very high path"]].forEach(([k, label], i) => {
+      lg.append("circle").attr("cx", i * 130 + 6).attr("cy", 0).attr("r", 6).attr("fill", colors[k]);
+      lg.append("text").attr("x", i * 130 + 16).attr("y", 4).attr("font-size", 12).text(label);
+    });
+    lg.append("text").attr("x", w + 10).attr("y", 4).attr("font-size", 11).attr("fill", "#666").text("gap");
+
+    const row = g.selectAll(".row").data(rows).join("g").attr("class", "row")
+      .attr("transform", (d, i) => `translate(0,${y(d, i)})`);
+
+    // separators between the groups in the short view
+    row.filter(d => d.sep).append("text").attr("x", -10).attr("text-anchor", "end").attr("dy", 4)
+      .attr("font-size", 14).attr("fill", "#999").text("···");
+
+    const real = row.filter(d => !d.sep);
+    const isMine = d => d.region === state.region;
+    real.append("rect").attr("x", -margin.left).attr("y", -rowH / 2).attr("width", w + margin.left + margin.right)
+      .attr("height", rowH).attr("fill", d => isMine(d) ? "#fbeaec" : "transparent")
+      .on("mousemove", (e, d) => showTip(e, `<strong>${pretty(d.region)}</strong><br>` +
+        `<span class="dot" style="background:${colors.ssp126}"></span>Low path: ${fmt(d.lo)}°C<br>` +
+        `<span class="dot" style="background:${colors.ssp585}"></span>Very high path: ${fmt(d.hi)}°C<br>` +
+        `Gap: ${d.gap.toFixed(1)}°C`))
+      .on("mouseleave", hideTip);
+    real.append("text").attr("x", -10).attr("dy", 4).attr("text-anchor", "end").attr("font-size", font)
+      .attr("font-weight", d => isMine(d) ? 700 : 400).attr("fill", d => isMine(d) ? "#a50026" : "#333")
+      .text(d => pretty(d.region)).style("pointer-events", "none");
+
+    const grow = animate && !revealed.cost;
+    const line = real.append("line").attr("x1", d => x(d.lo)).attr("x2", d => grow ? x(d.lo) : x(d.hi))
+      .attr("stroke", d => isMine(d) ? "#a50026" : "#bbb").attr("stroke-width", showAll ? 2 : 3)
+      .style("pointer-events", "none");
+    real.append("circle").attr("cx", d => x(d.lo)).attr("r", showAll ? 4.5 : 6).attr("fill", colors.ssp126)
+      .style("pointer-events", "none");
+    const hiDot = real.append("circle").attr("cx", d => grow ? x(d.lo) : x(d.hi)).attr("r", showAll ? 4.5 : 6)
+      .attr("fill", colors.ssp585).attr("opacity", grow ? 0 : 1).style("pointer-events", "none");
+    const gapText = real.append("text").attr("x", w + 10).attr("dy", 4).attr("font-size", font)
+      .attr("font-weight", d => isMine(d) ? 700 : 400).attr("fill", d => isMine(d) ? "#a50026" : "#666")
+      .attr("opacity", grow ? 0 : 1).text(d => `+${d.gap.toFixed(1)}°C`).style("pointer-events", "none");
+
+    if (!revealed.cost && !animate) {   // not on screen yet: wait for the scroll reveal
+      line.attr("x2", d => x(d.lo)); hiDot.attr("cx", d => x(d.lo)).attr("opacity", 0); gapText.attr("opacity", 0);
+    }
+    if (grow) {
+      revealed.cost = true;
+      line.transition().delay((d, i) => i * 60).duration(800).ease(d3.easeCubicOut).attr("x2", d => x(d.hi));
+      hiDot.transition().delay((d, i) => i * 60).duration(800).ease(d3.easeCubicOut).attr("cx", d => x(d.hi)).attr("opacity", 1);
+      gapText.transition().delay((d, i) => i * 60 + 600).duration(300).attr("opacity", 1);
+    }
+  }
+
+  const update = () => draw(false);
+  // lines stretch from the low path to the very high path, row by row
   function reveal(animate) {
-    revealed.cost = true;
-    if (!animate) { bars.attr("width", d => x(d.gap)); val.attr("opacity", 1); return; }
-    bars.transition("grow").delay((d, i) => i * 25).duration(600).ease(d3.easeCubicOut).attr("width", d => x(d.gap));
-    val.transition("grow").delay((d, i) => i * 25 + 400).duration(300).attr("opacity", 1);
+    if (!animate) { revealed.cost = true; draw(false); return; }
+    draw(true);
   }
   return { update, reveal };
 }

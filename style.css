@@ -98,3 +98,10 @@ a { color: #2b6cb0; }
 @media (prefers-reduced-motion: reduce) {
   .step { opacity: 1; transform: none; transition: none; }
 }
+
+/* show-all button for the region comparison */
+.show-all {
+  border: 1px solid #bbb; background: #fff; border-radius: 6px;
+  padding: 5px 12px; font-size: 13px; cursor: pointer; margin: 4px 0;
+}
+.show-all:hover { background: #f2f2f2; }

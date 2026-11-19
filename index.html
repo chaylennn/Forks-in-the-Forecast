@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Forks in the Forecast</title>
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -31,10 +31,11 @@
     <!-- AND -->
     <section class="step" data-chart="stripes">
       <p class="beat">1 · The past</p>
-      <h2>Every region shares the same past</h2>
+      <h2>The warming has already started</h2>
       <p>
-        Each stripe below is one year in <strong class="region-name"></strong>, from 1850 to 2014. Blue years were cooler
-        than the late-1800s average, and red years were warmer. Notice how the stripes turn red as human emissions grow.
+        Every region has warmed since the late 1800s, some more than others. Each stripe below is one year in
+        <strong class="region-name"></strong>, from 1850 to 2014. Blue years were cooler than the late-1800s average, and
+        red years were warmer. Notice how the stripes turn red as human emissions grow.
       </p>
       <div id="stripes" class="chart"></div>
       <p class="callout" id="stripes-note"></p>
@@ -46,8 +47,9 @@
       <h2>After 2015, the future forks</h2>
       <p>
         Climate scientists run their models under four "what if" scenarios, from cutting emissions quickly (green) to
-        relying heavily on fossil fuels (dark red). The gray line is the shared past. Turn paths on or off to compare them,
-        and hover to see the values for any year.
+        relying heavily on fossil fuels (dark red). The gray line is the region's past. Each line is the middle estimate
+        of 7 climate models, and the shaded band around it shows the range those models give, so a wider band means the
+        models agree less. Turn paths on or off to compare them, and hover to see the values for any year.
       </p>
       <div id="scenario-toggles"></div>
       <div id="fork" class="chart"></div>
@@ -60,8 +62,10 @@
       <h2>The path decides when a line is crossed</h2>
       <p>
         Drag the slider to pick a warming level. Each dot shows the year <strong class="region-name"></strong> first
-        reaches it under each scenario. Scientists treat +2°C as a key danger point, where heat waves and droughts get
-        much worse.
+        reaches it under each scenario. The +2°C mark comes from global climate goals like the Paris Agreement, which aim
+        to keep the planet's average warming below 2°C. That global average includes the oceans, which warm more slowly,
+        so most land regions pass +2°C before the planet as a whole does. Here we use it as a reference point for your
+        region.
       </p>
       <div class="slider-row">
         <label for="threshold">Warming level: <strong id="threshold-value">+2.0°C</strong></label>
@@ -76,9 +80,12 @@
       <p class="beat">4 · The choice</p>
       <h2>The cost of the path we choose</h2>
       <p>
-        This is how much extra warming each region gets by 2081-2100 if the world takes the very high path instead of the
-        low one. Your region is highlighted. Hover a bar for its value.
+        Every region keeps warming on either path, but how much depends on the path we take. Each row shows a region's
+        average warming in 2081-2100 on the low path (green) and the very high path (dark red). The longer the line
+        between them, the more that region has riding on our choices. Your region is highlighted; hover a row for its
+        values.
       </p>
+      <button id="cost-toggle" class="show-all">Show all 46 regions</button>
       <div id="cost" class="chart"></div>
       <p class="callout takeaway" id="takeaway"></p>
     </section>
@@ -93,12 +100,12 @@
         regions under the historical runs and four future scenarios. We laid out the full structure of our explorable
         explanation, following an and-but-therefore story: the shared past, the fork after 2015, the thresholds each
         path crosses, and the cost of choosing the high-emissions path. We built rough versions of four linked D3 charts:
-        warming stripes, the forking line chart with model ranges, a threshold timeline, and a ranking of all regions.
+        warming stripes, the forking line chart with model ranges, a threshold timeline, and a low-vs-very-high comparison across regions.
         Every chart updates when the reader picks a region, and we added interactions like scenario toggles, hover
         tooltips, a warming-level slider, and short summary text that changes with the region. We also added scroll
         animations so the story plays out as the reader moves down the page: the warming stripes fill in year by year,
         the fork chart draws the shared past and then branches into the four futures at 2015, the threshold dots slide
-        out to their crossing years, and the ranking bars grow in.
+        out to their crossing years, and the comparison lines stretch from the low path to the very high path.
       </p>
 
       <h3>What will be the most challenging part to design, and why?</h3>
@@ -123,6 +130,6 @@
   <div id="tooltip"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0"></script>
-  <script src="main.js?v=3"></script>
+  <script src="main.js?v=4"></script>
 </body>
 </html>
